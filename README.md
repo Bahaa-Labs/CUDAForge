@@ -154,8 +154,6 @@ CUDAForge/
 
 ## 🏛 Runtime Components
 
-## 🏛 Runtime Components
-
 | Component | Core Responsibilities |
 |---|---|
 | **Inference Runtime** | LLM execution, precision-aware inference, and kernel dispatch |
