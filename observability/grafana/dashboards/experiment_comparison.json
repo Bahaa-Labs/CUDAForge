@@ -1,0 +1,59 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "CUDAForge - Offline Benchmarks & Quantization Experiment Comparison",
+  "tags": ["cudaforge", "benchmarks", "pareto", "quantization"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "GPU Memory Footprint Across Quantization Modes (FP16 vs INT8 vs INT4)",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "cudaforge_gpu_memory_bytes / 1024 / 1024 / 1024",
+          "legendFormat": "{{category}} - {{device_id}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 7.5 },
+              { "color": "red", "value": 9.5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Kernel Dispatch Latency Benchmark (CUDA C++ vs Triton)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "cudaforge_kernel_dispatch_us_summary",
+          "legendFormat": "{{kernel_name}} ({{backend}})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "points", "pointSize": 6 },
+          "unit": "µs"
+        }
+      }
+    }
+  ]
+}

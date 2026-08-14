@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 2s
+  evaluation_interval: 2s
+  scrape_timeout: 1s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Metric Scrape Targets
+scrape_configs:
+  - job_name: "cudaforge_engine"
+    metrics_path: "/metrics"
+    scheme: "http"
+    static_configs:
+      - targets: ["host.docker.internal:8000"]
+        labels:
+          environment: "production"
+          gpu_arch: "sm_86"
+          gpu_model: "RTX_3080_10GB"
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

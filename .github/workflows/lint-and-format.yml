@@ -1,0 +1,55 @@
+name: Code Style, Formatting & Static Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-python:
+    name: Lint & Type Check (Python)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python Linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black mypy
+
+      - name: Check Code Formatting (Black)
+        run: |
+          black --check --diff .
+
+      - name: Run Linter (Ruff)
+        run: |
+          ruff check .
+
+      - name: Static Type Checking (Mypy)
+        run: |
+          mypy --ignore-missing-imports cudaforge/ benchmarks/
+
+  lint-cpp:
+    name: Lint & Format Check (C++/CUDA)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install LLVM Clang Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Verify C++/CUDA Formatting
+        run: |
+          find csrc/ -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.cu" -o -iname "*.cuh" | xargs clang-format --dry-run --Werror

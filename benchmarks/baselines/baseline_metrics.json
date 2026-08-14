@@ -1,0 +1,14 @@
+{
+  "flash_attention_v2": {
+    "flash_attn_p50_ms": 4.68,
+    "flash_tflops": 58.8
+  },
+  "paged_kv_cache_manager": {
+    "alloc_latency_p50_us": 1.25,
+    "gather_latency_p50_ms": 0.08
+  },
+  "continuous_batching_scheduler": {
+    "throughput_tokens_per_sec": 1850.0,
+    "scheduler_step_p50_us": 4.5
+  }
+}

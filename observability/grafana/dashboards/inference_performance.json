@@ -1,0 +1,103 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "title": "CUDAForge - Real-Time LLM Inference Performance",
+  "tags": ["cudaforge", "vllm", "cuda", "metrics"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Token Generation Throughput (Tokens/sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(cudaforge_generated_tokens_total[10s])) by (phase)",
+          "legendFormat": "Tokens Generated ({{phase}})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 15 },
+          "unit": "tok/s"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Time to First Token (TTFT) & Inter-Token Latency (ITL)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(cudaforge_ttft_seconds_bucket[10s])) by (le)) * 1000",
+          "legendFormat": "TTFT P95 (ms)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(cudaforge_itl_seconds_bucket[10s])) by (le)) * 1000",
+          "legendFormat": "ITL P95 (ms)",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth" },
+          "unit": "ms"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Paged KV-Cache Utilization & Fragmentation Pressure",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "cudaforge_kv_cache_usage_ratio * 100",
+          "legendFormat": "KV Cache Usage (%)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "fillOpacity": 20 },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Continuous Batching Scheduler Queue State",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "cudaforge_active_requests",
+          "legendFormat": "Active Running Batches",
+          "refId": "A"
+        },
+        {
+          "expr": "cudaforge_waiting_queue_length",
+          "legendFormat": "Waiting Queue Length",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line" },
+          "unit": "short"
+        }
+      }
+    }
+  ]
+}

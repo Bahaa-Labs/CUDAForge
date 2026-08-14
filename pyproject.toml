@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cudaforge"
+version = "0.1.0"
+description = "Ampere-Optimized CUDA & Triton Execution Suite"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0.0",
+    "triton>=2.1.0",
+    "numpy",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+# Explicitly limit package discovery to 'cudaforge'
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cudaforge*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+ignore = ["ALL"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = [
+    ".",
+    "src",
+]
+asyncio_mode = "strict"

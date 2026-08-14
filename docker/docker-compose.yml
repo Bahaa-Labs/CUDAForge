@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  cudaforge-engine:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.gpu
+    image: cudaforge:latest
+    container_name: cudaforge_gpu_runner
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_LAUNCH_BLOCKING=0
+      - PYTHONPATH=/workspace/CUDAForge
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ../benchmarks:/workspace/CUDAForge/benchmarks
+      - ../cudaforge:/workspace/CUDAForge/cudaforge
+    working_dir: /workspace/CUDAForge
+    command: python3 benchmarks/regression_runner.py
+    tty: true
+    stdin_open: true
