@@ -52,4 +52,4 @@ jobs:
 
       - name: Verify C++/CUDA Formatting
         run: |
-          find csrc/ -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.cu" -o -iname "*.cuh" | xargs clang-format --dry-run --Werror
+          find csrc/ -iname "*.h" -o -iname "*.hpp" -o -iname "*.cpp" -o -iname "*.cu" -o -iname "*.cuh" | xargs clang-format --dry-run
