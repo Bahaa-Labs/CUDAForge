@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 CUDAForge
+# CUDAForge
 
 ### High-Performance LLM Inference Runtime & GPU Experimentation Engine
 
