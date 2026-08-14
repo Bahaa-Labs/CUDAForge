@@ -32,7 +32,9 @@ def test_readiness_probe(test_client: TestClient):
 
 def test_engine_metrics_tracker_computations():
     EngineMetricsTracker.set_batch_size(8)
-    EngineMetricsTracker.update_kv_cache_usage(allocated_bytes=750.0, total_bytes=1000.0)
+    EngineMetricsTracker.update_kv_cache_usage(
+        allocated_bytes=750.0, total_bytes=1000.0
+    )
     EngineMetricsTracker.record_tokens_generated(count=150, elapsed_seconds=3.0)
     EngineMetricsTracker.record_request_duration(0.025)
 

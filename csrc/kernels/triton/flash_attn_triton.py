@@ -5,13 +5,30 @@ import triton.language as tl
 
 @triton.jit
 def _flash_attn_v2_fwd_kernel(
-    Q, K, V, Out,
+    Q,
+    K,
+    V,
+    Out,
     sm_scale,
-    stride_qb, stride_qh, stride_qm, stride_qd,
-    stride_kb, stride_kh, stride_kn, stride_kd,
-    stride_vb, stride_vh, stride_vn, stride_vd,
-    stride_ob, stride_oh, stride_om, stride_od,
-    Z, H, N_CTX,
+    stride_qb,
+    stride_qh,
+    stride_qm,
+    stride_qd,
+    stride_kb,
+    stride_kh,
+    stride_kn,
+    stride_kd,
+    stride_vb,
+    stride_vh,
+    stride_vn,
+    stride_vd,
+    stride_ob,
+    stride_oh,
+    stride_om,
+    stride_od,
+    Z,
+    H,
+    N_CTX,
     BLOCK_M: tl.constexpr,
     BLOCK_DMODEL: tl.constexpr,
     BLOCK_N: tl.constexpr,
@@ -51,7 +68,9 @@ def _flash_attn_v2_fwd_kernel(
         curr_offs_n = start_n + offs_n
 
         # Load K tile
-        k_ptrs = K_ptr + (curr_offs_n[None, :] * stride_kn + offs_d[:, None] * stride_kd)
+        k_ptrs = K_ptr + (
+            curr_offs_n[None, :] * stride_kn + offs_d[:, None] * stride_kd
+        )
         k = tl.load(k_ptrs, mask=curr_offs_n[None, :] < N_CTX, other=0.0)
 
         # Q * K^T GEMM
@@ -71,7 +90,9 @@ def _flash_attn_v2_fwd_kernel(
         acc = acc * alpha[:, None]
 
         # Load V tile
-        v_ptrs = V_ptr + (curr_offs_n[:, None] * stride_vn + offs_d[None, :] * stride_vd)
+        v_ptrs = V_ptr + (
+            curr_offs_n[:, None] * stride_vn + offs_d[None, :] * stride_vd
+        )
         v = tl.load(v_ptrs, mask=curr_offs_n[:, None] < N_CTX, other=0.0)
 
         # P * V GEMM
@@ -88,7 +109,13 @@ def _flash_attn_v2_fwd_kernel(
     tl.store(o_ptrs, acc.to(tl.float16), mask=offs_m[:, None] < N_CTX)
 
 
-def flash_attn_triton(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, causal: bool = False, sm_scale: float = None) -> torch.Tensor:
+def flash_attn_triton(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    causal: bool = False,
+    sm_scale: float = None,
+) -> torch.Tensor:
     """Triton FlashAttention-2 Wrapper function.
 
     Args:
@@ -100,7 +127,7 @@ def flash_attn_triton(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, causal:
     """
     Z, H, N_CTX, D_HEAD = q.shape
     if sm_scale is None:
-        sm_scale = 1.0 / (D_HEAD ** 0.5)
+        sm_scale = 1.0 / (D_HEAD**0.5)
 
     out = torch.empty_like(q)
 
@@ -110,13 +137,30 @@ def flash_attn_triton(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, causal:
     grid = (triton.cdiv(N_CTX, BLOCK_M), H, Z)
 
     _flash_attn_v2_fwd_kernel[grid](
-        q, k, v, out,
+        q,
+        k,
+        v,
+        out,
         sm_scale,
-        q.stride(0), q.stride(1), q.stride(2), q.stride(3),
-        k.stride(0), k.stride(1), k.stride(2), k.stride(3),
-        v.stride(0), v.stride(1), v.stride(2), v.stride(3),
-        out.stride(0), out.stride(1), out.stride(2), out.stride(3),
-        Z, H, N_CTX,
+        q.stride(0),
+        q.stride(1),
+        q.stride(2),
+        q.stride(3),
+        k.stride(0),
+        k.stride(1),
+        k.stride(2),
+        k.stride(3),
+        v.stride(0),
+        v.stride(1),
+        v.stride(2),
+        v.stride(3),
+        out.stride(0),
+        out.stride(1),
+        out.stride(2),
+        out.stride(3),
+        Z,
+        H,
+        N_CTX,
         BLOCK_M=BLOCK_M,
         BLOCK_DMODEL=D_HEAD,
         BLOCK_N=BLOCK_N,

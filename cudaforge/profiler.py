@@ -93,9 +93,7 @@ class NsightComputeProfiler:
         cmd.extend(python_command)
 
         try:
-            res = subprocess.run(
-                cmd, capture_output=True, text=True, check=True
-            )
+            res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         except subprocess.CalledProcessError as err:
             raise RuntimeError(
                 f"Nsight Compute failed execution:\nSTDOUT: {err.stdout}\nSTDERR: {err.stderr}"
@@ -119,7 +117,7 @@ class NsightComputeProfiler:
             return []
 
         headers = [h.strip('"') for h in data_lines[0].split('","')]
-        
+
         try:
             kernel_idx = headers.index("Kernel Name")
             metric_idx = headers.index("Metric Name")
@@ -158,20 +156,23 @@ class NsightComputeProfiler:
                         "sm__throughput.avg.pct_of_peak_sustained_elapsed", 0.0
                     ),
                     memory_sol_pct=m_dict.get(
-                        "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed", 0.0
+                        "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed",
+                        0.0,
                     ),
                     sm_occupancy_pct=m_dict.get(
                         "sm__warps_active.avg.pct_of_peak_sustained_active", 0.0
                     ),
                     dram_throughput_gbs=dram_bytes_sec / 1e9,
                     l1_cache_hit_rate=m_dict.get(
-                        "l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_hit_rate.pct", 0.0
+                        "l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_hit_rate.pct",
+                        0.0,
                     ),
                     l2_cache_hit_rate=m_dict.get(
                         "lts__t_sectors_op_read_hit_rate.pct", 0.0
                     ),
                     tensor_core_utilization=m_dict.get(
-                        "sm__inst_executed_pipe_tensor.avg.pct_of_peak_sustained_active", 0.0
+                        "sm__inst_executed_pipe_tensor.avg.pct_of_peak_sustained_active",
+                        0.0,
                     ),
                     raw_metrics=m_dict,
                 )
@@ -193,7 +194,7 @@ class CUDAEventProfiler:
     def benchmark(self, fn, *args, **kwargs) -> CUDATimerReport:
         """Runs warmup and profiling cycles around callable `fn`."""
         assert torch.cuda.is_available(), "CUDA runtime required for CUDAEventProfiler."
-        
+
         # Reset Peak VRAM Statistics
         torch.cuda.reset_peak_memory_stats()
         torch.cuda.synchronize()
@@ -203,8 +204,12 @@ class CUDAEventProfiler:
             fn(*args, **kwargs)
         torch.cuda.synchronize()
 
-        start_events = [torch.cuda.Event(enable_timing=True) for _ in range(self.profile_iters)]
-        end_events = [torch.cuda.Event(enable_timing=True) for _ in range(self.profile_iters)]
+        start_events = [
+            torch.cuda.Event(enable_timing=True) for _ in range(self.profile_iters)
+        ]
+        end_events = [
+            torch.cuda.Event(enable_timing=True) for _ in range(self.profile_iters)
+        ]
 
         # Profile loop
         for i in range(self.profile_iters):

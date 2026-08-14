@@ -5,12 +5,22 @@ import triton.language as tl
 
 @triton.jit
 def _int4_dequant_gemm_kernel(
-    A_ptr, B_quant_ptr, Scales_ptr, Zeros_ptr, C_ptr,
-    M, N, K,
-    stride_am, stride_ak,
-    stride_bk, stride_bn,
-    stride_sm, stride_sn,
-    stride_cm, stride_cn,
+    A_ptr,
+    B_quant_ptr,
+    Scales_ptr,
+    Zeros_ptr,
+    C_ptr,
+    M,
+    N,
+    K,
+    stride_am,
+    stride_ak,
+    stride_bk,
+    stride_bn,
+    stride_sm,
+    stride_sn,
+    stride_cm,
+    stride_cn,
     GROUP_SIZE: tl.constexpr,
     BLOCK_M: tl.constexpr,
     BLOCK_N: tl.constexpr,
@@ -32,7 +42,9 @@ def _int4_dequant_gemm_kernel(
 
         # 1. Load Activation A chunk [BLOCK_M, BLOCK_K] (FP16)
         a_ptrs = A_ptr + (offs_m[:, None] * stride_am + offs_k[None, :] * stride_ak)
-        a = tl.load(a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K), other=0.0)
+        a = tl.load(
+            a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K), other=0.0
+        )
 
         # 2. Load Scales for current group [BLOCK_N]
         group_idx = (k * BLOCK_K) // GROUP_SIZE
@@ -41,13 +53,17 @@ def _int4_dequant_gemm_kernel(
 
         # 3. Load Packed INT4 B weights: 8 elements per uint32 along K dimension
         packed_k_offs = offs_k // 8
-        b_ptrs = B_quant_ptr + (packed_k_offs[:, None] * stride_bk + offs_n[None, :] * stride_bn)
-        b_packed = tl.load(b_ptrs, mask=(offs_k[:, None] < K) & (offs_n[None, :] < N), other=0)
+        b_ptrs = B_quant_ptr + (
+            packed_k_offs[:, None] * stride_bk + offs_n[None, :] * stride_bn
+        )
+        b_packed = tl.load(
+            b_ptrs, mask=(offs_k[:, None] < K) & (offs_n[None, :] < N), other=0
+        )
 
         # 4. Unpack INT4 values directly in registers
         shift = (offs_k % 8) * 4
         b_int4 = (b_packed >> shift[:, None]) & 0x0F
-        
+
         # Dequantize to FP32 for arithmetic accuracy, then downcast to FP16 to match A
         b_fp16 = (b_int4.to(tl.float32) * scales).to(tl.float16)
 
@@ -56,7 +72,9 @@ def _int4_dequant_gemm_kernel(
 
     # Store FP16 result to output C
     c_ptrs = C_ptr + (offs_m[:, None] * stride_cm + offs_n[None, :] * stride_cn)
-    tl.store(c_ptrs, acc.to(tl.float16), mask=(offs_m[:, None] < M) & (offs_n[None, :] < N))
+    tl.store(
+        c_ptrs, acc.to(tl.float16), mask=(offs_m[:, None] < M) & (offs_n[None, :] < N)
+    )
 
 
 def int4_gemm_dequant_triton(
@@ -87,12 +105,22 @@ def int4_gemm_dequant_triton(
     grid = (triton.cdiv(M, BLOCK_M), triton.cdiv(N, BLOCK_N))
 
     _int4_dequant_gemm_kernel[grid](
-        a, b_quant, scales, zeros, c,
-        M, N, K,
-        a.stride(0), a.stride(1),
-        b_quant.stride(0), b_quant.stride(1),
-        scales.stride(0), scales.stride(1),
-        c.stride(0), c.stride(1),
+        a,
+        b_quant,
+        scales,
+        zeros,
+        c,
+        M,
+        N,
+        K,
+        a.stride(0),
+        a.stride(1),
+        b_quant.stride(0),
+        b_quant.stride(1),
+        scales.stride(0),
+        scales.stride(1),
+        c.stride(0),
+        c.stride(1),
         GROUP_SIZE=group_size,
         BLOCK_M=BLOCK_M,
         BLOCK_N=BLOCK_N,

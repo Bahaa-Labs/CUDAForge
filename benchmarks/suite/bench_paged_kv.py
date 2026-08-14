@@ -42,7 +42,7 @@ def run_paged_kv_benchmark(
 
     for _ in range(max_allocs):
         t0 = time.perf_counter_ns()
-        
+
         req_blocks = []
         for _ in range(blocks_per_req):
             if free_blocks:

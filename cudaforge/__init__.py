@@ -4,8 +4,7 @@ try:
     from . import _C
 except ImportError as e:
     raise ImportError(
-        "Failed to load cudaforge C++ extension module '_C'. "
-        "Run `python setup.py build_ext --inplace` to build."
+        "Failed to load cudaforge C++ extension module '_C'. Run `python setup.py build_ext --inplace` to build."
     ) from e
 
 # 1. Bind C++ extension objects first

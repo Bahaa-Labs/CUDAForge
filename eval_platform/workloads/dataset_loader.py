@@ -14,7 +14,7 @@ class EvaluationSample:
     sample_id: str
     prompt: str
     target_reference: str
-    task_type: str  
+    task_type: str
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -80,7 +80,9 @@ class WorkloadDatasetLoader:
                     EvaluationSample(
                         sample_id=str(record.get("id", f"sample_{line_idx}")),
                         prompt=record.get("prompt", ""),
-                        target_reference=record.get("reference", record.get("target", "")),
+                        target_reference=record.get(
+                            "reference", record.get("target", "")
+                        ),
                         task_type=record.get("task_type", task_type),
                         metadata=record.get("metadata", {}),
                     )

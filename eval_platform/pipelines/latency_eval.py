@@ -43,7 +43,7 @@ class LatencyEvaluator:
     ) -> LatencyProfileResult:
         """
         Profiles execution timing across prefill and generation steps using CUDA events.
-        
+
         Args:
             step_fn: Callable `fn(step)` simulating or executing generation step `step`.
             prompt_len: Length of input context prompt.
@@ -85,7 +85,7 @@ class LatencyEvaluator:
         # Calculate Latency Distribution Metrics
         itl_mean = statistics.mean(token_latencies)
         itl_std = statistics.stdev(token_latencies) if len(token_latencies) > 1 else 0.0
-        
+
         sorted_itl = sorted(token_latencies)
         itl_p50 = self._percentile(sorted_itl, 0.50)
         itl_p95 = self._percentile(sorted_itl, 0.95)
@@ -94,8 +94,14 @@ class LatencyEvaluator:
         total_gen_time_ms = sum(token_latencies)
         total_latency_sec = (ttft_ms + total_gen_time_ms) / 1000.0
 
-        prefill_tps = (batch_size * prompt_len) / (ttft_ms / 1000.0) if ttft_ms > 0 else 0.0
-        generation_tps = (batch_size * len(token_latencies)) / (total_gen_time_ms / 1000.0) if total_gen_time_ms > 0 else 0.0
+        prefill_tps = (
+            (batch_size * prompt_len) / (ttft_ms / 1000.0) if ttft_ms > 0 else 0.0
+        )
+        generation_tps = (
+            (batch_size * len(token_latencies)) / (total_gen_time_ms / 1000.0)
+            if total_gen_time_ms > 0
+            else 0.0
+        )
 
         return LatencyProfileResult(
             ttft_ms=ttft_ms,

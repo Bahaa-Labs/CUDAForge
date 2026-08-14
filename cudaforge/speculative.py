@@ -15,6 +15,7 @@ import torch.nn.functional as F
 @dataclasses.dataclass
 class SpeculativeBatchResult:
     """Holds execution result metrics for a speculative step."""
+
     accepted_tokens: torch.Tensor  # [batch_size, num_accepted]
     num_accepted: int
     draft_tokens_generated: int
@@ -62,14 +63,16 @@ class SpeculativeEngine:
     ) -> torch.Tensor:
         """Applies temperature scaling, top-p filtering, and samples next token."""
         logits = logits / temperature
-        
+
         if top_p < 1.0:
             sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
             cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
-            
+
             # Remove tokens with cumulative probability above top_p threshold
             sorted_indices_to_remove = cumulative_probs > top_p
-            sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
+            sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[
+                ..., :-1
+            ].clone()
             sorted_indices_to_remove[..., 0] = 0
 
             indices_to_remove = sorted_indices_to_remove.scatter(
@@ -102,7 +105,7 @@ class SpeculativeEngine:
         # Phase 1: Draft Model Auto-Regression (Generate K tokens)
         # ------------------------------------------------------------------
         t_draft_start = time.perf_counter()
-        
+
         draft_input_ids = input_ids.clone()
         draft_tokens_list: List[torch.Tensor] = []
         draft_probs_list: List[torch.Tensor] = []
@@ -111,7 +114,7 @@ class SpeculativeEngine:
             # Run forward pass on small draft model
             draft_logits = self.draft_runner.forward(draft_input_ids, kv_cache_handles)
             next_logits = draft_logits[:, -1, :]
-            
+
             probs = F.softmax(next_logits / self.temperature, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)
 
@@ -123,7 +126,9 @@ class SpeculativeEngine:
 
         # Stack draft outputs
         draft_tokens = torch.cat(draft_tokens_list, dim=-1)  # [batch_size, K]
-        draft_probs = torch.stack(draft_probs_list, dim=1)    # [batch_size, K, vocab_size]
+        draft_probs = torch.stack(
+            draft_probs_list, dim=1
+        )  # [batch_size, K, vocab_size]
 
         # ------------------------------------------------------------------
         # Phase 2: Target Model Parallel Verification (K + 1 tokens)
@@ -131,10 +136,12 @@ class SpeculativeEngine:
         t_target_start = time.perf_counter()
 
         verification_input_ids = torch.cat([input_ids, draft_tokens], dim=-1)
-        target_logits = self.target_runner.forward(verification_input_ids, kv_cache_handles)
-        
+        target_logits = self.target_runner.forward(
+            verification_input_ids, kv_cache_handles
+        )
+
         # Extract target probabilities over candidate draft positions
-        target_candidate_logits = target_logits[:, -(self.k + 1):, :]
+        target_candidate_logits = target_logits[:, -(self.k + 1) :, :]
         target_probs = F.softmax(target_candidate_logits / self.temperature, dim=-1)
 
         t_target_ms = (time.perf_counter() - t_target_start) * 1000.0
@@ -146,26 +153,32 @@ class SpeculativeEngine:
         num_accepted = 0
 
         for i in range(self.k):
-            candidate_token = draft_tokens[:, i:i+1] # [batch_size, 1]
-            
+            candidate_token = draft_tokens[:, i : i + 1]  # [batch_size, 1]
+
             p_draft = draft_probs[:, i, :].gather(dim=-1, index=candidate_token)
             q_target = target_probs[:, i, :].gather(dim=-1, index=candidate_token)
 
             r = torch.rand_like(p_draft)
-            acceptance_ratio = torch.minimum(torch.ones_like(q_target), q_target / (p_draft + 1e-8))
+            acceptance_ratio = torch.minimum(
+                torch.ones_like(q_target), q_target / (p_draft + 1e-8)
+            )
 
             if (r < acceptance_ratio).all():
                 accepted_tokens_list.append(candidate_token)
                 num_accepted += 1
             else:
                 # Reject token: sample replacement from modified distribution max(0, q - p)
-                modified_dist = torch.clamp(target_probs[:, i, :] - draft_probs[:, i, :], min=0.0)
+                modified_dist = torch.clamp(
+                    target_probs[:, i, :] - draft_probs[:, i, :], min=0.0
+                )
                 sum_dist = modified_dist.sum(dim=-1, keepdim=True)
-                
+
                 # Fallback to pure target distribution if normalized difference is zero
-                fallback_mask = (sum_dist <= 1e-6)
-                modified_dist = torch.where(fallback_mask, target_probs[:, i, :], modified_dist)
-                
+                fallback_mask = sum_dist <= 1e-6
+                modified_dist = torch.where(
+                    fallback_mask, target_probs[:, i, :], modified_dist
+                )
+
                 resampled_token = torch.multinomial(modified_dist, num_samples=1)
                 accepted_tokens_list.append(resampled_token)
                 num_accepted += 1

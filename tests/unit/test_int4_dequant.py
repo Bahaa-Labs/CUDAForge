@@ -30,7 +30,10 @@ def test_int4_gemm_dequant_parity(M, N, K, group_size):
 
     # Generate random INT4 weights (values from 0 to 15)
     w_int4 = torch.randint(0, 16, (K, N), device="cuda", dtype=torch.int32)
-    scales = torch.randn((K // group_size, N), dtype=torch.float16, device="cuda").abs() * 0.1
+    scales = (
+        torch.randn((K // group_size, N), dtype=torch.float16, device="cuda").abs()
+        * 0.1
+    )
 
     # Pack weights
     b_quant = pack_int4_weights(w_int4)

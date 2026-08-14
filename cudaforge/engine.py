@@ -4,6 +4,7 @@ the native C++/CUDA runtime bindings (_C extension module). Supports zero-copy
 tensor memory sharing, prefix-cached paged KV caching, continuous batching,
 and high-throughput streaming inference.
 """
+
 from __future__ import annotations
 import asyncio
 import ctypes
@@ -21,16 +22,17 @@ logger = logging.getLogger("cudaforge.engine")
 # -----------------------------------------------------------------------------
 try:
     from cudaforge import _C
+
     _HAS_NATIVE_EXTENSION = True
 except ImportError:
     try:
         import _C
+
         _HAS_NATIVE_EXTENSION = True
     except ImportError:
         _HAS_NATIVE_EXTENSION = False
         logger.warning(
-            "CUDAForge C++ native extension (_C) not found. "
-            "Please compile extensions using CMake or `pip install -e .`"
+            "CUDAForge C++ native extension (_C) not found. Please compile extensions using CMake or `pip install -e .`"
         )
 
 
@@ -40,6 +42,7 @@ except ImportError:
 @dataclass
 class SamplingParams:
     """Generation and sampling hyper-parameters for a request."""
+
     temperature: float = 1.0
     top_p: float = 1.0
     top_k: int = -1
@@ -52,6 +55,7 @@ class SamplingParams:
 @dataclass
 class EngineConfig:
     """Global configuration parameters for the CUDAForge Engine runtime."""
+
     # Model Architecture Specs
     num_layers: int = 32
     num_kv_heads: int = 8
@@ -88,6 +92,7 @@ class EngineConfig:
 @dataclass
 class GenerationOutput:
     """Represents a generated output token step for a given request."""
+
     request_id: int
     token_id: int
     is_final: bool = False
@@ -98,10 +103,7 @@ class GenerationOutput:
 # Zero-Copy Tensor Utility
 # -----------------------------------------------------------------------------
 def ptr_to_torch_tensor(
-    ptr: int,
-    shape: torch.Size,
-    dtype: torch.dtype = torch.float16,
-    device_id: int = 0
+    ptr: int, shape: torch.Size, dtype: torch.dtype = torch.float16, device_id: int = 0
 ) -> torch.Tensor:
     """
     Wraps a raw CUDA physical pointer from C++ into a PyTorch Tensor
@@ -109,19 +111,17 @@ def ptr_to_torch_tensor(
     """
     if ptr == 0:
         raise ValueError("Cannot wrap a NULL CUDA memory pointer into PyTorch Tensor.")
-    
+
     # Calculate total elements and size
     numel = shape.numel()
     element_size = torch.tensor([], dtype=dtype).element_size()
-    
+
     # Create PyTorch tensor directly from memory address
     ctx = ctypes.c_void_p(ptr)
     tensor = torch.frombuffer(
-        (ctx.value + i * element_size for i in range(numel)),
-        dtype=dtype,
-        count=numel
+        (ctx.value + i * element_size for i in range(numel)), dtype=dtype, count=numel
     ).view(shape)
-    
+
     return tensor.to(f"cuda:{device_id}")
 
 
@@ -136,7 +136,9 @@ class LLMEngine:
 
     def __init__(self, config: EngineConfig):
         if not _HAS_NATIVE_EXTENSION:
-            raise RuntimeError("Cannot initialize LLMEngine: Native _C extension module unavailable.")
+            raise RuntimeError(
+                "Cannot initialize LLMEngine: Native _C extension module unavailable."
+            )
 
         self.config = config
         self._request_counter: int = 0
@@ -145,20 +147,16 @@ class LLMEngine:
         # 1. Initialize Native C++ Memory Arena & KV Cache
         self.kv_config = self.config.to_native_kv_config()
         self.allocator = _C.BlockAllocator(
-            self.config.total_gpu_blocks,
-            self.config.block_size
+            self.config.total_gpu_blocks, self.config.block_size
         )
         self.kv_cache = _C.PagedKVCache(self.kv_config, self.allocator)
 
         # 2. Initialize Native Scheduler & Model Runner
         self.batcher = _C.ContinuousBatcher(
-            self.config.max_num_seqs,
-            self.config.max_num_batched_tokens
+            self.config.max_num_seqs, self.config.max_num_batched_tokens
         )
         self.model_runner = _C.ModelRunner(
-            self.batcher,
-            self.config.vocab_size,
-            self.config.eos_token_id
+            self.batcher, self.config.vocab_size, self.config.eos_token_id
         )
 
         logger.info(
@@ -167,9 +165,7 @@ class LLMEngine:
         )
 
     def add_request(
-        self,
-        prompt_tokens: List[int],
-        sampling_params: Optional[SamplingParams] = None
+        self, prompt_tokens: List[int], sampling_params: Optional[SamplingParams] = None
     ) -> int:
         """
         Registers a new prompt request with prefix caching and pushes it
@@ -185,14 +181,13 @@ class LLMEngine:
         matched_prefix_tokens = self.kv_cache.register_sequence_with_prefix(
             req_id, prompt_tokens
         )
-        logger.debug(f"Req ID {req_id}: Prefix Cache Hit on {matched_prefix_tokens} tokens.")
+        logger.debug(
+            f"Req ID {req_id}: Prefix Cache Hit on {matched_prefix_tokens} tokens."
+        )
 
         # 2. Instantiate C++ Request Object and queue into Batcher
         cpp_request = _C.Request(
-            req_id,
-            prompt_tokens,
-            sampling_params.max_tokens,
-            sampling_params.priority
+            req_id, prompt_tokens, sampling_params.max_tokens, sampling_params.priority
         )
         self.batcher.add_request(cpp_request)
         self._active_requests[req_id] = sampling_params
@@ -228,11 +223,11 @@ class LLMEngine:
             if not is_final:
                 self.kv_cache.append_tokens(req_id, 1)
 
-            results.append(GenerationOutput(
-                request_id=req_id,
-                token_id=token_id,
-                is_final=is_final
-            ))
+            results.append(
+                GenerationOutput(
+                    request_id=req_id, token_id=token_id, is_final=is_final
+                )
+            )
 
             if is_final:
                 finished_req_ids.append(req_id)
@@ -260,21 +255,17 @@ class LLMEngine:
     def get_key_buffer_tensor(self, block_id: int, layer_idx: int) -> torch.Tensor:
         """Zero-copy accessor retrieving PyTorch Tensor view over C++ Key block pointer."""
         raw_ptr = self.kv_cache.get_key_block_ptr(block_id, layer_idx)
-        shape = torch.Size([
-            self.config.num_kv_heads,
-            self.config.block_size,
-            self.config.head_dim
-        ])
+        shape = torch.Size(
+            [self.config.num_kv_heads, self.config.block_size, self.config.head_dim]
+        )
         return ptr_to_torch_tensor(raw_ptr, shape)
 
     def get_value_buffer_tensor(self, block_id: int, layer_idx: int) -> torch.Tensor:
         """Zero-copy accessor retrieving PyTorch Tensor view over C++ Value block pointer."""
         raw_ptr = self.kv_cache.get_value_block_ptr(block_id, layer_idx)
-        shape = torch.Size([
-            self.config.num_kv_heads,
-            self.config.block_size,
-            self.config.head_dim
-        ])
+        shape = torch.Size(
+            [self.config.num_kv_heads, self.config.block_size, self.config.head_dim]
+        )
         return ptr_to_torch_tensor(raw_ptr, shape)
 
 
@@ -316,7 +307,10 @@ class AsyncLLMEngine:
         """Background worker continuously invoking steps on synchronous core engine."""
         while self._is_running:
             try:
-                if self.engine.batcher.get_running_count() > 0 or self.engine.batcher.get_pending_count() > 0:
+                if (
+                    self.engine.batcher.get_running_count() > 0
+                    or self.engine.batcher.get_pending_count() > 0
+                ):
                     outputs = self.engine.step()
                     for out in outputs:
                         queue = self._request_queues.get(out.request_id)
@@ -330,13 +324,13 @@ class AsyncLLMEngine:
                     # Idle sleep when no active requests exist
                     await asyncio.sleep(0.005)
             except Exception as e:
-                logger.error(f"Error in AsyncLLMEngine background loop: {e}", exc_info=True)
+                logger.error(
+                    f"Error in AsyncLLMEngine background loop: {e}", exc_info=True
+                )
                 await asyncio.sleep(0.01)
 
     async def generate(
-        self,
-        prompt_tokens: List[int],
-        sampling_params: Optional[SamplingParams] = None
+        self, prompt_tokens: List[int], sampling_params: Optional[SamplingParams] = None
     ) -> AsyncGenerator[GenerationOutput, None]:
         """
         Submits request and yields generated tokens as an asynchronous stream.

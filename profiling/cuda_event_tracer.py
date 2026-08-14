@@ -19,21 +19,23 @@ class CUDAEventTracer:
         """Record start CUDA event on specified stream."""
         start_event = torch.cuda.Event(enable_timing=True)
         end_event = torch.cuda.Event(enable_timing=True)
-        
+
         current_stream = stream or torch.cuda.current_stream()
         start_event.record(current_stream)
-        
+
         if tag not in self.events:
             self.events[tag] = []
             self.timings[tag] = []
-            
+
         self.events[tag].append((start_event, end_event))
 
     def stop(self, tag: str, stream: Optional[torch.cuda.Stream] = None) -> None:
         """Record stop CUDA event on specified stream."""
         if tag not in self.events or not self.events[tag]:
-            raise RuntimeError(f"CUDAEventTracer: stop() called for tag '{tag}' without start().")
-            
+            raise RuntimeError(
+                f"CUDAEventTracer: stop() called for tag '{tag}' without start()."
+            )
+
         _, end_event = self.events[tag][-1]
         current_stream = stream or torch.cuda.current_stream()
         end_event.record(current_stream)
@@ -50,9 +52,9 @@ class CUDAEventTracer:
             for start_evt, end_evt in event_pairs:
                 # elapsed_time returns milliseconds
                 durations.append(start_evt.elapsed_time(end_evt))
-            
+
             self.timings[tag].extend(durations)
-            
+
             if durations:
                 sorted_d = sorted(durations)
                 n = len(sorted_d)
@@ -79,7 +81,9 @@ _GLOBAL_TRACER = CUDAEventTracer()
 
 
 @contextlib.contextmanager
-def profile_section(tag: str, tracer: Optional[CUDAEventTracer] = None) -> Generator[None, None, None]:
+def profile_section(
+    tag: str, tracer: Optional[CUDAEventTracer] = None
+) -> Generator[None, None, None]:
     """Context manager to measure GPU section latency via CUDA events."""
     active_tracer = tracer or _GLOBAL_TRACER
     active_tracer.start(tag)

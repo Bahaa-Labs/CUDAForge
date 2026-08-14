@@ -5,11 +5,13 @@ import triton.language as tl
 
 @triton.jit
 def _fused_sampling_triton_kernel(
-    Logits_ptr, Output_tokens_ptr,
+    Logits_ptr,
+    Output_tokens_ptr,
     vocab_size,
     temperature,
-    stride_lb, stride_lv,
-    BLOCK_V: tl.constexpr
+    stride_lb,
+    stride_lv,
+    BLOCK_V: tl.constexpr,
 ):
     batch_id = tl.program_id(0)
     offs_v = tl.arange(0, BLOCK_V)
@@ -35,7 +37,9 @@ def _fused_sampling_triton_kernel(
     tl.store(Output_tokens_ptr + batch_id, max_idx)
 
 
-def fused_sampling_triton(logits: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
+def fused_sampling_triton(
+    logits: torch.Tensor, temperature: float = 1.0
+) -> torch.Tensor:
     """Triton Fused Token Sampling Launcher.
 
     Args:
@@ -49,10 +53,12 @@ def fused_sampling_triton(logits: torch.Tensor, temperature: float = 1.0) -> tor
     grid = (batch_size,)
 
     _fused_sampling_triton_kernel[grid](
-        logits, output_tokens,
+        logits,
+        output_tokens,
         vocab_size,
         temperature,
-        logits.stride(0), logits.stride(1),
+        logits.stride(0),
+        logits.stride(1),
         BLOCK_V=block_v,
         num_warps=8,
     )

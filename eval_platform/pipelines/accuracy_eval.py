@@ -11,10 +11,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 # ============================================================================
 # Dataclasses & Evaluation Schemas
 # ============================================================================
+
 
 @dataclass
 class PerplexityResult:
@@ -46,6 +46,7 @@ class AccuracyResult:
     """
     Unified summary container expected by the evaluation platform orchestrator.
     """
+
     task_name: str
     metric_score: float
     num_samples: int
@@ -58,6 +59,7 @@ class AccuracyResult:
 # ============================================================================
 # Core Evaluator Implementation
 # ============================================================================
+
 
 class AccuracyEvaluator:
     """
@@ -88,7 +90,9 @@ class AccuracyEvaluator:
             num_samples = perplexity_res.total_tokens_evaluated
 
         if generated_sequences is not None and reference_sequences is not None:
-            correctness_res = self.evaluate_correctness(generated_sequences, reference_sequences)
+            correctness_res = self.evaluate_correctness(
+                generated_sequences, reference_sequences
+            )
             if primary_metric == 0.0:
                 primary_metric = correctness_res.exact_match
             num_samples = correctness_res.total_samples
@@ -112,12 +116,18 @@ class AccuracyEvaluator:
         flat_logits = logits.view(-1, vocab_size)
         flat_targets = target_ids.view(-1)
 
-        loss = F.cross_entropy(flat_logits, flat_targets, ignore_index=ignore_index, reduction="sum")
+        loss = F.cross_entropy(
+            flat_logits, flat_targets, ignore_index=ignore_index, reduction="sum"
+        )
         non_padding_mask = flat_targets != ignore_index
         num_valid_tokens = int(non_padding_mask.sum().item())
 
         if num_valid_tokens == 0:
-            return PerplexityResult(mean_perplexity=float("nan"), mean_cross_entropy=float("nan"), total_tokens_evaluated=0)
+            return PerplexityResult(
+                mean_perplexity=float("nan"),
+                mean_cross_entropy=float("nan"),
+                total_tokens_evaluated=0,
+            )
 
         mean_ce = (loss / num_valid_tokens).item()
         perplexity = math.exp(mean_ce)
@@ -136,7 +146,9 @@ class AccuracyEvaluator:
         """
         Evaluates Exact Match (EM) and ROUGE-L F1 scores across token ID sequences.
         """
-        assert len(generated_sequences) == len(reference_sequences), "Mismatched sample counts."
+        assert len(generated_sequences) == len(
+            reference_sequences
+        ), "Mismatched sample counts."
         total_samples = len(generated_sequences)
         if total_samples == 0:
             return GenerationCorrectnessResult(0.0, 0.0, 0.0, 0)
@@ -192,13 +204,15 @@ class AccuracyEvaluator:
         Measures numerical drift and KL divergence between full-precision baseline
         and quantized (INT8/INT4) logits.
         """
-        assert fp16_logits.shape == quantized_logits.shape, "Shape mismatch in logit evaluation."
+        assert (
+            fp16_logits.shape == quantized_logits.shape
+        ), "Shape mismatch in logit evaluation."
 
         fp16 = fp16_logits.detach().to(torch.float64)
         quant = quantized_logits.detach().to(torch.float64)
 
         diff = fp16 - quant
-        mse = float(torch.mean(diff ** 2).item())
+        mse = float(torch.mean(diff**2).item())
         rmse = math.sqrt(mse)
         max_err = float(torch.max(torch.abs(diff)).item())
 
@@ -211,13 +225,13 @@ class AccuracyEvaluator:
 
         p_prob = F.softmax(fp16, dim=-1)
         q_prob = F.softmax(quant, dim=-1)
-        kl_div = float(
-            F.kl_div(q_prob.log(), p_prob, reduction="batchmean").item()
-        )
+        kl_div = float(F.kl_div(q_prob.log(), p_prob, reduction="batchmean").item())
 
-        signal_power = torch.mean(fp16 ** 2)
-        noise_power = torch.mean(diff ** 2)
-        snr_db = 10.0 * math.log10((signal_power / (noise_power + 1e-12)).item() + 1e-12)
+        signal_power = torch.mean(fp16**2)
+        noise_power = torch.mean(diff**2)
+        snr_db = 10.0 * math.log10(
+            (signal_power / (noise_power + 1e-12)).item() + 1e-12
+        )
 
         return LogitDriftResult(
             mse=mse,

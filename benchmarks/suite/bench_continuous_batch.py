@@ -14,10 +14,15 @@ def run_continuous_batch_benchmark(
     max_token_budget: int = 2048,
 ) -> Dict[str, Any]:
     """Simulates dynamic request arrival, admission control, and token budget scheduling."""
-    
+
     # Request pool simulation (prompt_len, max_gen_len)
     requests = [
-        {"id": i, "prompt_len": 128 + (i % 64), "gen_len": 64 + (i % 32), "arrived_at": time.time()}
+        {
+            "id": i,
+            "prompt_len": 128 + (i % 64),
+            "gen_len": 64 + (i % 32),
+            "arrived_at": time.time(),
+        }
         for i in range(num_requests)
     ]
 
@@ -65,7 +70,9 @@ def run_continuous_batch_benchmark(
         running_batch = still_running
 
     total_sim_sec = time.perf_counter() - start_sim_time
-    total_tokens_generated = sum(r["prompt_len"] + (64 + (r["id"] % 32)) for r in requests)
+    total_tokens_generated = sum(
+        r["prompt_len"] + (64 + (r["id"] % 32)) for r in requests
+    )
 
     return {
         "operation": "continuous_batching_scheduler",

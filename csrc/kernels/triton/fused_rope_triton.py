@@ -5,12 +5,25 @@ import triton.language as tl
 
 @triton.jit
 def _fused_rope_kernel(
-    Q_ptr, K_ptr, Cos_ptr, Sin_ptr,
-    stride_qb, stride_qs, stride_qh, stride_qd,
-    stride_kb, stride_ks, stride_kh, stride_kd,
-    stride_cos_s, stride_cos_d,
-    stride_sin_s, stride_sin_d,
-    num_q_heads, num_kv_heads, seq_len,
+    Q_ptr,
+    K_ptr,
+    Cos_ptr,
+    Sin_ptr,
+    stride_qb,
+    stride_qs,
+    stride_qh,
+    stride_qd,
+    stride_kb,
+    stride_ks,
+    stride_kh,
+    stride_kd,
+    stride_cos_s,
+    stride_cos_d,
+    stride_sin_s,
+    stride_sin_d,
+    num_q_heads,
+    num_kv_heads,
+    seq_len,
     HEAD_DIM: tl.constexpr,
     HALF_DIM: tl.constexpr,
     BLOCK_DIM: tl.constexpr,
@@ -34,8 +47,20 @@ def _fused_rope_kernel(
 
     if is_key == 0:
         if head_idx < num_q_heads:
-            q_first_ptrs = Q_ptr + batch_id * stride_qb + seq_id * stride_qs + head_idx * stride_qh + offs_d * stride_qd
-            q_second_ptrs = Q_ptr + batch_id * stride_qb + seq_id * stride_qs + head_idx * stride_qh + (offs_d + HALF_DIM) * stride_qd
+            q_first_ptrs = (
+                Q_ptr
+                + batch_id * stride_qb
+                + seq_id * stride_qs
+                + head_idx * stride_qh
+                + offs_d * stride_qd
+            )
+            q_second_ptrs = (
+                Q_ptr
+                + batch_id * stride_qb
+                + seq_id * stride_qs
+                + head_idx * stride_qh
+                + (offs_d + HALF_DIM) * stride_qd
+            )
 
             x1 = tl.load(q_first_ptrs, mask=mask, other=0.0).to(tl.float32)
             x2 = tl.load(q_second_ptrs, mask=mask, other=0.0).to(tl.float32)
@@ -47,8 +72,20 @@ def _fused_rope_kernel(
             tl.store(q_second_ptrs, o2.to(tl.float16), mask=mask)
     else:
         if head_idx < num_kv_heads:
-            k_first_ptrs = K_ptr + batch_id * stride_kb + seq_id * stride_ks + head_idx * stride_kh + offs_d * stride_kd
-            k_second_ptrs = K_ptr + batch_id * stride_kb + seq_id * stride_ks + head_idx * stride_kh + (offs_d + HALF_DIM) * stride_kd
+            k_first_ptrs = (
+                K_ptr
+                + batch_id * stride_kb
+                + seq_id * stride_ks
+                + head_idx * stride_kh
+                + offs_d * stride_kd
+            )
+            k_second_ptrs = (
+                K_ptr
+                + batch_id * stride_kb
+                + seq_id * stride_ks
+                + head_idx * stride_kh
+                + (offs_d + HALF_DIM) * stride_kd
+            )
 
             x1 = tl.load(k_first_ptrs, mask=mask, other=0.0).to(tl.float32)
             x2 = tl.load(k_second_ptrs, mask=mask, other=0.0).to(tl.float32)
@@ -86,12 +123,25 @@ def fused_rope_triton(
     grid = (total_tokens, max_heads, 2)
 
     _fused_rope_kernel[grid](
-        q, k, cos, sin,
-        q.stride(0), q.stride(1), q.stride(2), q.stride(3),
-        k.stride(0), k.stride(1), k.stride(2), k.stride(3),
-        cos.stride(0), cos.stride(1),
-        sin.stride(0), sin.stride(1),
-        num_q_heads, num_kv_heads, seq_len,
+        q,
+        k,
+        cos,
+        sin,
+        q.stride(0),
+        q.stride(1),
+        q.stride(2),
+        q.stride(3),
+        k.stride(0),
+        k.stride(1),
+        k.stride(2),
+        k.stride(3),
+        cos.stride(0),
+        cos.stride(1),
+        sin.stride(0),
+        sin.stride(1),
+        num_q_heads,
+        num_kv_heads,
+        seq_len,
         HEAD_DIM=head_dim,
         HALF_DIM=half_dim,
         BLOCK_DIM=block_dim,

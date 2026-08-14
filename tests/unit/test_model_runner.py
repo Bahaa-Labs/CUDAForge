@@ -17,7 +17,7 @@ def test_model_runner_streaming_and_cancellation():
 
     # Step 1: Prefill
     runner.step()
-    
+
     # Mid-flight cancellation of request 2
     runner.cancel_request(2)
     assert runner.is_cancelled(2)

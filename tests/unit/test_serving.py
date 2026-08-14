@@ -40,7 +40,7 @@ def test_generate_streaming_sse():
         response = client.post("/v1/generate", json=payload)
         assert response.status_code == 200
         assert "text/event-stream" in response.headers["content-type"]
-        
+
         # Read first chunk from response body stream
         content = response.text
         assert "data: " in content

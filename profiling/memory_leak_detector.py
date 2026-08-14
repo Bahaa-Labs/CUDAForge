@@ -10,6 +10,7 @@ import torch
 @dataclasses.dataclass(frozen=True)
 class MemorySnapshot:
     """Immutable GPU memory state snapshot."""
+
     allocated_bytes: int
     reserved_bytes: int
     active_bytes: int
@@ -36,13 +37,13 @@ class GPUMemoryTracker:
 
         stats = torch.cuda.memory_stats(self.device)
         mem_info = torch.cuda.mem_get_info(self.device)
-        
+
         allocated = stats.get("allocated_bytes.all.current", 0)
         reserved = stats.get("reserved_bytes.all.current", 0)
         active = stats.get("active_bytes.all.current", 0)
         inactive_split = stats.get("inactive_split_bytes.all.current", 0)
         max_allocated = stats.get("allocated_bytes.all.peak", 0)
-        
+
         free_gpu, total_gpu = mem_info
 
         # Calculate fragmentation: unallocated reserved memory ratio
@@ -72,7 +73,9 @@ class GPUMemoryTracker:
         """Verifies allocated memory growth between two checkpoints does not exceed threshold."""
         snaps = dict(self.snapshots)
         if baseline_label not in snaps or target_label not in snaps:
-            raise KeyError(f"Missing snapshot comparison labels: {baseline_label}, {target_label}")
+            raise KeyError(
+                f"Missing snapshot comparison labels: {baseline_label}, {target_label}"
+            )
 
         base = snaps[baseline_label]
         target = snaps[target_label]
@@ -89,10 +92,14 @@ class GPUMemoryTracker:
 
     def print_summary(self) -> None:
         """Prints tabular overview of captured snapshots."""
-        print(f"\n{'Label':<25} | {'Allocated (MB)':<15} | {'Reserved (MB)':<15} | {'Frag %':<8}")
+        print(
+            f"\n{'Label':<25} | {'Allocated (MB)':<15} | {'Reserved (MB)':<15} | {'Frag %':<8}"
+        )
         print("-" * 70)
         for label, snap in self.snapshots:
             alloc_mb = snap.allocated_bytes / (1024 * 1024)
             res_mb = snap.reserved_bytes / (1024 * 1024)
             frag_pct = snap.fragmentation_ratio * 100
-            print(f"{label:<25} | {alloc_mb:<15.2f} | {res_mb:<15.2f} | {frag_pct:<8.2f}%")
+            print(
+                f"{label:<25} | {alloc_mb:<15.2f} | {res_mb:<15.2f} | {frag_pct:<8.2f}%"
+            )

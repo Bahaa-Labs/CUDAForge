@@ -96,6 +96,7 @@ KERNEL_DISPATCH_TIME_MICROSECONDS = Summary(
 
 def trace_kernel_execution(kernel_name: str, backend: str = "cuda") -> Callable:
     """Decorator to measure low-level kernel execution or dispatch timing."""
+
     def decorator(func: Callable) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             start = time.perf_counter_ns()
@@ -105,7 +106,9 @@ def trace_kernel_execution(kernel_name: str, backend: str = "cuda") -> Callable:
                 kernel_name=kernel_name, backend=backend
             ).observe(duration_us)
             return res
+
         return wrapper
+
     return decorator
 
 

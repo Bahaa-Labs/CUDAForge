@@ -91,22 +91,32 @@ class ExperimentLogger:
         """Captures version control state using system Git calls."""
         try:
             commit_hash = (
-                subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL)
+                subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
+                )
                 .decode("ascii")
                 .strip()
             )
             branch_name = (
-                subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.DEVNULL)
+                subprocess.check_output(
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                )
                 .decode("ascii")
                 .strip()
             )
             dirty_check = (
-                subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.DEVNULL)
+                subprocess.check_output(
+                    ["git", "status", "--porcelain"], stderr=subprocess.DEVNULL
+                )
                 .decode("ascii")
                 .strip()
             )
             commit_time = (
-                subprocess.check_output(["git", "log", "-1", "--format=%cd", "--date=iso"], stderr=subprocess.DEVNULL)
+                subprocess.check_output(
+                    ["git", "log", "-1", "--format=%cd", "--date=iso"],
+                    stderr=subprocess.DEVNULL,
+                )
                 .decode("ascii")
                 .strip()
             )
@@ -132,7 +142,7 @@ class ExperimentLogger:
         gpu_name = torch.cuda.get_device_name(0) if cuda_avail else "N/A (CPU Only)"
         gpu_count = torch.cuda.device_count() if cuda_avail else 0
         vram_gb = (
-            torch.cuda.get_device_properties(0).total_memory / (1024.0 ** 3)
+            torch.cuda.get_device_properties(0).total_memory / (1024.0**3)
             if cuda_avail
             else 0.0
         )
@@ -186,13 +196,17 @@ class ExperimentLogger:
     def log_parameters(self, params: Dict[str, Any]) -> None:
         """Logs hyperparameters or evaluation configurations."""
         if self.current_run is None:
-            raise RuntimeError("No active run. Call start_run() before logging parameters.")
+            raise RuntimeError(
+                "No active run. Call start_run() before logging parameters."
+            )
         self.current_run.parameters.update(params)
 
     def log_metrics(self, metrics: Dict[str, Any]) -> None:
         """Logs scalar evaluation metrics."""
         if self.current_run is None:
-            raise RuntimeError("No active run. Call start_run() before logging metrics.")
+            raise RuntimeError(
+                "No active run. Call start_run() before logging metrics."
+            )
         self.current_run.metrics.update(metrics)
 
     def log_artifact(
@@ -200,7 +214,9 @@ class ExperimentLogger:
     ) -> ArtifactManifest:
         """Registers and stores a local artifact under the active run."""
         if self.current_run is None:
-            raise RuntimeError("No active run. Call start_run() before logging artifacts.")
+            raise RuntimeError(
+                "No active run. Call start_run() before logging artifacts."
+            )
 
         manifest = self.store.store_file(
             source_path=source_path,

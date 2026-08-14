@@ -6,9 +6,15 @@ def test_continuous_batcher_priority_and_budget():
     # Max 2 sequences, max 300 total batched tokens
     batcher = ContinuousBatcher(max_num_seqs=2, max_num_batched_tokens=300)
 
-    req1 = Request(req_id=1, prompt=[101, 102] * 50, max_tokens=10, priority=1)  # 100 tokens
-    req2 = Request(req_id=2, prompt=[201, 202] * 100, max_tokens=10, priority=5) # 200 tokens (High Priority)
-    req3 = Request(req_id=3, prompt=[301, 302] * 20, max_tokens=10, priority=2)  # 40 tokens
+    req1 = Request(
+        req_id=1, prompt=[101, 102] * 50, max_tokens=10, priority=1
+    )  # 100 tokens
+    req2 = Request(
+        req_id=2, prompt=[201, 202] * 100, max_tokens=10, priority=5
+    )  # 200 tokens (High Priority)
+    req3 = Request(
+        req_id=3, prompt=[301, 302] * 20, max_tokens=10, priority=2
+    )  # 40 tokens
 
     assert batcher.add_request(req1)
     assert batcher.add_request(req2)
@@ -32,7 +38,7 @@ def test_continuous_batcher_priority_and_budget():
 def test_continuous_batcher_cancel():
     batcher = ContinuousBatcher(max_num_seqs=4, max_num_batched_tokens=1024)
     req = Request(req_id=99, prompt=[1, 2, 3], max_tokens=20)
-    
+
     batcher.add_request(req)
     assert batcher.get_pending_count() == 1
 

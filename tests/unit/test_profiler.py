@@ -12,7 +12,9 @@ from cudaforge.profiler import (
 )
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA device required for profiler tests")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(), reason="CUDA device required for profiler tests"
+)
 def test_cuda_event_profiler_timing():
     profiler = CUDAEventProfiler(label="test_matmul", warmup_iters=2, profile_iters=5)
 
@@ -29,7 +31,9 @@ def test_cuda_event_profiler_timing():
     assert report.peak_memory_mb > 0.0
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA device required for NVTX test")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(), reason="CUDA device required for NVTX test"
+)
 def test_nvtx_range_context():
     # Verify NVTX context executes cleanly without throwing exceptions
     with nvtx_range("test_section"):

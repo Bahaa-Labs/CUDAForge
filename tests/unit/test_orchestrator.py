@@ -24,7 +24,7 @@ def test_matrix_config_cartesian_product_count():
     # Total points should be 2 * 2 * 2 * 1 = 8
     expected = 2 * 2 * 2 * 1
     orchestrator = BenchmarkOrchestrator()
-    
+
     # Verify pre-check estimation on single point
     pt = BenchmarkPointConfig(
         batch_size=1,
@@ -37,7 +37,10 @@ def test_matrix_config_cartesian_product_count():
     assert vram_est > 0
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA device required for benchmark orchestrator tests")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(),
+    reason="CUDA device required for benchmark orchestrator tests",
+)
 def test_single_benchmark_point_execution(tmp_path):
     orchestrator = BenchmarkOrchestrator(output_dir=str(tmp_path))
     matrix_cfg = MatrixConfig(

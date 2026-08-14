@@ -39,7 +39,9 @@ def test_logit_drift_evaluation():
     assert drift.mse < 0.01
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required for latency profiler test")
+@pytest.mark.skipif(
+    not torch.cuda.is_available(), reason="CUDA required for latency profiler test"
+)
 def test_latency_evaluator_profiling():
     evaluator = LatencyEvaluator(warmup_runs=1)
 

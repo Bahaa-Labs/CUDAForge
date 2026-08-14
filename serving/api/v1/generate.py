@@ -24,14 +24,27 @@ router = APIRouter(tags=["Inference Generation"])
 # Pydantic Schemas
 # ============================================================================
 
+
 class GenerationRequest(BaseModel):
     prompt: str = Field(..., min_length=1, description="Input context prompt text.")
-    max_tokens: int = Field(default=256, ge=1, le=4096, description="Maximum tokens to generate.")
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature.")
-    top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability.")
-    repetition_penalty: float = Field(default=1.0, ge=0.8, le=2.0, description="Repetition penalty factor.")
-    stream: bool = Field(default=True, description="Enable Server-Sent Events (SSE) streaming.")
-    stop_sequences: Optional[List[str]] = Field(default=None, description="Optional stop tokens.")
+    max_tokens: int = Field(
+        default=256, ge=1, le=4096, description="Maximum tokens to generate."
+    )
+    temperature: float = Field(
+        default=0.7, ge=0.0, le=2.0, description="Sampling temperature."
+    )
+    top_p: float = Field(
+        default=0.9, ge=0.0, le=1.0, description="Nucleus sampling probability."
+    )
+    repetition_penalty: float = Field(
+        default=1.0, ge=0.8, le=2.0, description="Repetition penalty factor."
+    )
+    stream: bool = Field(
+        default=True, description="Enable Server-Sent Events (SSE) streaming."
+    )
+    stop_sequences: Optional[List[str]] = Field(
+        default=None, description="Optional stop tokens."
+    )
 
     @field_validator("prompt")
     @classmethod
@@ -63,6 +76,7 @@ class GenerationResponse(BaseModel):
 # Token Generation Stream Engine
 # ============================================================================
 
+
 async def mock_cuda_token_generator(
     request: GenerationRequest, request_id: str
 ) -> AsyncGenerator[str, None]:
@@ -74,24 +88,30 @@ async def mock_cuda_token_generator(
     ttft_measured = False
     ttft_ms = 0.0
 
-    dummy_tokens = request.prompt.split()[:5] + ["is", "optimized", "by", "CUDAForge", "engine."]
+    dummy_tokens = request.prompt.split()[:5] + [
+        "is",
+        "optimized",
+        "by",
+        "CUDAForge",
+        "engine.",
+    ]
     total_steps = min(request.max_tokens, len(dummy_tokens))
 
     try:
         for idx in range(total_steps):
             step_start = time.perf_counter()
-            
+
             # Simulate CUDA kernel execution delay per token
             await asyncio.sleep(0.015)  # ~15ms per token
-            
+
             step_latency_ms = (time.perf_counter() - step_start) * 1000.0
-            
+
             if not ttft_measured:
                 ttft_ms = (time.perf_counter() - start_time) * 1000.0
                 ttft_measured = True
 
             token_text = dummy_tokens[idx] + " "
-            is_final = (idx == total_steps - 1)
+            is_final = idx == total_steps - 1
 
             chunk = TokenStreamChunk(
                 token_id=1000 + idx,
@@ -109,17 +129,24 @@ async def mock_cuda_token_generator(
                 break
 
     except asyncio.CancelledError:
-        logger.warning(f"Client disconnected early from streaming request_id={request_id}")
+        logger.warning(
+            f"Client disconnected early from streaming request_id={request_id}"
+        )
         raise
     except Exception as err:
-        logger.error(f"Execution error during token generation for request_id={request_id}: {err}")
-        error_payload = json.dumps({"error_code": "ERR_INTERNAL_EXECUTION", "detail": str(err)})
+        logger.error(
+            f"Execution error during token generation for request_id={request_id}: {err}"
+        )
+        error_payload = json.dumps(
+            {"error_code": "ERR_INTERNAL_EXECUTION", "detail": str(err)}
+        )
         yield f"event: error\ndata: {error_payload}\n\n"
 
 
 # ============================================================================
 # API Routes
 # ============================================================================
+
 
 @router.post(
     "/generate",
@@ -157,6 +184,7 @@ async def generate_tokens(
 
     try:
         if req.stream:
+
             async def streaming_wrapper():
                 try:
                     async for event in mock_cuda_token_generator(req, request_id):

@@ -55,7 +55,7 @@ class StatisticalAnalyzer:
     ) -> LatencyDistributionSummary:
         """
         Computes complete non-parametric latency distribution analysis.
-        
+
         Args:
             samples: Raw latency observations in milliseconds.
             num_bootstrap_samples: Number of bootstrap resamples for CI estimation.
@@ -66,7 +66,9 @@ class StatisticalAnalyzer:
         data = data[~np.isnan(data)]  # Filter NaNs
 
         if len(data) == 0:
-            raise ValueError("Cannot compute statistical distribution on empty or NaN dataset.")
+            raise ValueError(
+                "Cannot compute statistical distribution on empty or NaN dataset."
+            )
 
         count = len(data)
         mean_val = float(np.mean(data))
@@ -85,10 +87,18 @@ class StatisticalAnalyzer:
             data, np.mean, num_bootstrap_samples, confidence_level, random_seed
         )
         p95_ci = StatisticalAnalyzer._bootstrap_ci(
-            data, lambda x: np.percentile(x, 95.0), num_bootstrap_samples, confidence_level, random_seed
+            data,
+            lambda x: np.percentile(x, 95.0),
+            num_bootstrap_samples,
+            confidence_level,
+            random_seed,
         )
         p99_ci = StatisticalAnalyzer._bootstrap_ci(
-            data, lambda x: np.percentile(x, 99.0), num_bootstrap_samples, confidence_level, random_seed
+            data,
+            lambda x: np.percentile(x, 99.0),
+            num_bootstrap_samples,
+            confidence_level,
+            random_seed,
         )
 
         return LatencyDistributionSummary(
@@ -119,7 +129,9 @@ class StatisticalAnalyzer:
         """Computes non-parametric percentile bootstrap confidence interval."""
         if len(data) < 2 or num_bootstrap <= 0:
             val = float(stat_fn(data))
-            return ConfidenceInterval(lower=val, upper=val, confidence_level=confidence_level)
+            return ConfidenceInterval(
+                lower=val, upper=val, confidence_level=confidence_level
+            )
 
         rng = np.random.default_rng(seed)
         n = len(data)

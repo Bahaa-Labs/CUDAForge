@@ -30,7 +30,7 @@ class ParetoFrontierCalculator:
     ) -> List[ParetoPoint]:
         """
         Computes the Pareto-optimal frontier set from benchmark observation points.
-        
+
         Args:
             points: List of ParetoPoint evaluation entries.
             objectives: Dictionary specifying optimization direction per metric name.
@@ -55,7 +55,9 @@ class ParetoFrontierCalculator:
                 elif direction == "minimize":
                     matrix[i, j] = -val  # Invert so larger value is strictly better
                 else:
-                    raise ValueError(f"Invalid objective direction '{direction}'. Must be 'maximize' or 'minimize'.")
+                    raise ValueError(
+                        f"Invalid objective direction '{direction}'. Must be 'maximize' or 'minimize'."
+                    )
 
         # Find non-dominated points
         is_optimal = np.ones(num_points, dtype=bool)
@@ -71,25 +73,25 @@ class ParetoFrontierCalculator:
 
         # Calculate normalized Euclidean distance to closest Pareto frontier point
         frontier_matrix = matrix[is_optimal]
-        
+
         # Normalize matrix for fair distance calculation
         min_vals = np.min(matrix, axis=0)
         max_vals = np.max(matrix, axis=0)
         range_vals = np.where((max_vals - min_vals) == 0, 1.0, max_vals - min_vals)
-        
+
         norm_matrix = (matrix - min_vals) / range_vals
         norm_frontier = (frontier_matrix - min_vals) / range_vals
 
         processed_points: List[ParetoPoint] = []
         for i, pt in enumerate(points):
             pt_is_opt = bool(is_optimal[i])
-            
+
             if pt_is_opt:
                 dist = 0.0
             else:
                 # Euclidean distance to nearest frontier point
                 diffs = norm_frontier - norm_matrix[i]
-                dists = np.sqrt(np.sum(diffs ** 2, axis=1))
+                dists = np.sqrt(np.sum(diffs**2, axis=1))
                 dist = float(np.min(dists))
 
             processed_pt = ParetoPoint(

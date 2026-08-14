@@ -64,7 +64,7 @@ class ArtifactStore:
         run_dir.mkdir(parents=True, exist_ok=True)
 
         dest = (run_dir / src.name).resolve()
-        
+
         # Avoid shutil.SameFileError if source is already inside target run_dir
         if src != dest:
             shutil.copy2(src, dest)
@@ -114,4 +114,6 @@ class ArtifactStore:
 
         torch.save(tensor.detach().cpu(), target_path)
 
-        return self.store_file(target_path, run_id, content_type="application/octet-stream")
+        return self.store_file(
+            target_path, run_id, content_type="application/octet-stream"
+        )

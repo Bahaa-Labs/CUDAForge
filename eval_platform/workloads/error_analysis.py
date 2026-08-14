@@ -65,7 +65,9 @@ class ErrorAnalyzer:
         """
         Compares baseline vs quantized inference outputs across evaluation samples.
         """
-        if len(samples) != len(baseline_outputs) or len(samples) != len(quantized_outputs):
+        if len(samples) != len(baseline_outputs) or len(samples) != len(
+            quantized_outputs
+        ):
             raise ValueError("Sample and output list lengths must match exactly.")
 
         total_samples = len(samples)
@@ -83,7 +85,9 @@ class ErrorAnalyzer:
         failed_ids: List[str] = []
         diagnostics: List[SampleErrorDiagnostic] = []
 
-        for sample, base_out, quant_out in zip(samples, baseline_outputs, quantized_outputs):
+        for sample, base_out, quant_out in zip(
+            samples, baseline_outputs, quantized_outputs
+        ):
             base_correct = cls.evaluate_exact_match(base_out, sample.target_reference)
             quant_correct = cls.evaluate_exact_match(quant_out, sample.target_reference)
 

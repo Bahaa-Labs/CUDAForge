@@ -13,7 +13,9 @@ def test_artifact_store_and_sha256(tmp_path):
     store = ArtifactStore(store_root=str(tmp_path))
     data = {"metric_key": "val_123", "score": 0.99}
 
-    manifest = store.store_json(data=data, run_id="run_test_001", filename="metrics.json")
+    manifest = store.store_json(
+        data=data, run_id="run_test_001", filename="metrics.json"
+    )
 
     assert manifest.filename == "metrics.json"
     assert manifest.sha256_hash is not None

@@ -26,9 +26,15 @@ def run_flash_attn_benchmark(
     dtype = torch.float16
 
     # Allocate Tensors
-    q = torch.randn(batch_size, num_heads, seq_len, head_dim, device=device, dtype=dtype)
-    k = torch.randn(batch_size, num_heads, seq_len, head_dim, device=device, dtype=dtype)
-    v = torch.randn(batch_size, num_heads, seq_len, head_dim, device=device, dtype=dtype)
+    q = torch.randn(
+        batch_size, num_heads, seq_len, head_dim, device=device, dtype=dtype
+    )
+    k = torch.randn(
+        batch_size, num_heads, seq_len, head_dim, device=device, dtype=dtype
+    )
+    v = torch.randn(
+        batch_size, num_heads, seq_len, head_dim, device=device, dtype=dtype
+    )
 
     start_evt = torch.cuda.Event(enable_timing=True)
     end_evt = torch.cuda.Event(enable_timing=True)
@@ -62,7 +68,7 @@ def run_flash_attn_benchmark(
             flash_latencies.append(start_evt.elapsed_time(end_evt))
 
     # TFLOPS Calculation: 4 * batch * heads * seq_len^2 * head_dim
-    flops = 4 * batch_size * num_heads * (seq_len ** 2) * head_dim
+    flops = 4 * batch_size * num_heads * (seq_len**2) * head_dim
     sdp_p50 = statistics.median(sdp_latencies)
     flash_p50 = statistics.median(flash_latencies)
 

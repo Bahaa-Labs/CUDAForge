@@ -26,13 +26,21 @@ def ref_rope(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Ten
 @pytest.mark.parametrize("num_q_heads", [8])
 @pytest.mark.parametrize("num_kv_heads", [2, 8])
 @pytest.mark.parametrize("head_dim", [64, 128])
-def test_fused_rope_triton_parity(batch_size, seq_len, num_q_heads, num_kv_heads, head_dim):
+def test_fused_rope_triton_parity(
+    batch_size, seq_len, num_q_heads, num_kv_heads, head_dim
+):
     if not torch.cuda.is_available():
         pytest.skip("CUDA device required")
 
     torch.manual_seed(1337)
-    q = torch.randn((batch_size, seq_len, num_q_heads, head_dim), dtype=torch.float16, device="cuda")
-    k = torch.randn((batch_size, seq_len, num_kv_heads, head_dim), dtype=torch.float16, device="cuda")
+    q = torch.randn(
+        (batch_size, seq_len, num_q_heads, head_dim), dtype=torch.float16, device="cuda"
+    )
+    k = torch.randn(
+        (batch_size, seq_len, num_kv_heads, head_dim),
+        dtype=torch.float16,
+        device="cuda",
+    )
 
     half_dim = head_dim // 2
     cos = torch.randn((seq_len, half_dim), dtype=torch.float32, device="cuda")

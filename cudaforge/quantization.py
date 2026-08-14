@@ -85,11 +85,11 @@ class QuantizationCalibrator:
         """
         histogram = activation_histogram.float().cpu().numpy()
         edges = bin_edges.cpu().numpy()
-        
+
         # Zero out zero-bin
         histogram[0] = 0
         total_data = histogram.sum()
-        
+
         if total_data == 0:
             return float(edges[-1])
 
@@ -113,16 +113,16 @@ class QuantizationCalibrator:
             for j in range(target_bins):
                 start = j * num_merged_bins
                 end = (j + 1) * num_merged_bins
-                
+
                 start_idx = int(np.floor(start))
                 end_idx = int(np.ceil(end))
-                
+
                 for k in range(start_idx, min(end_idx, i)):
                     weight = 1.0
                     if k == start_idx:
-                        weight -= (start - start_idx)
+                        weight -= start - start_idx
                     if k == end_idx - 1:
-                        weight -= (end_idx - end)
+                        weight -= end_idx - end
                     quantized_bins[j] += reference_dist[k] * weight
 
             # Expand quantized distribution back to size i
@@ -131,10 +131,10 @@ class QuantizationCalibrator:
                 start = j * num_merged_bins
                 end = (j + 1) * num_merged_bins
                 count = 0.0
-                
+
                 start_idx = int(np.floor(start))
                 end_idx = int(np.ceil(end))
-                
+
                 for k in range(start_idx, min(end_idx, i)):
                     if reference_dist[k] > 0:
                         count += 1.0
@@ -190,9 +190,7 @@ class Quantizer:
         return qtensor
 
     @staticmethod
-    def dequantize_int8(
-        qtensor: torch.Tensor, scale: torch.Tensor
-    ) -> torch.Tensor:
+    def dequantize_int8(qtensor: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
         """Dequantizes int8 tensor back to floating point."""
         return qtensor.to(torch.float32) * scale
 
@@ -203,7 +201,7 @@ class Quantizer:
         """
         Quantizes FP16 weight matrix into packed 4-bit unsigned integers (2x INT4 per uint8 element)
         for custom Ampere INT4 GEMM kernels.
-        
+
         Input: Weight tensor [M, N] in float16/float32.
         Output: Packed uint8 tensor [M, N // 2] and FP16 scale vector [M, 1].
         """
@@ -251,7 +249,7 @@ def evaluate_numerical_drift(
     dequant = quantized_dequantized.detach().to(torch.float64)
 
     diff = orig - dequant
-    mse = float(torch.mean(diff ** 2).item())
+    mse = float(torch.mean(diff**2).item())
     rmse = math.sqrt(mse)
     mae = float(torch.mean(torch.abs(diff)).item())
     max_err = float(torch.max(torch.abs(diff)).item())
@@ -265,8 +263,8 @@ def evaluate_numerical_drift(
     )
 
     # Signal-to-Noise Ratio (SNR) in dB
-    signal_power = torch.mean(orig ** 2)
-    noise_power = torch.mean(diff ** 2)
+    signal_power = torch.mean(orig**2)
+    noise_power = torch.mean(diff**2)
     snr = 10.0 * math.log10((signal_power / (noise_power + 1e-12)).item() + 1e-12)
 
     return NumericalDriftReport(

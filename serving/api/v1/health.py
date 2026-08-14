@@ -20,9 +20,12 @@ router = APIRouter(tags=["Health & Readiness"])
 # Response Schemas
 # ============================================================================
 
+
 class HealthResponse(BaseModel):
     status: str = Field(..., example="healthy")
-    timestamp: float = Field(..., description="UNIX epoch timestamp of check execution.")
+    timestamp: float = Field(
+        ..., description="UNIX epoch timestamp of check execution."
+    )
     uptime_seconds: float = Field(..., description="Engine process uptime in seconds.")
     version: str = Field(default="1.0.0", description="CUDAForge service version.")
 
@@ -31,12 +34,15 @@ class ReadinessResponse(BaseModel):
     status: str = Field(..., example="ready")
     cuda_available: bool = Field(..., description="CUDA GPU runtime availability.")
     semaphore_initialized: bool = Field(..., description="Concurrency state readiness.")
-    active_in_flight_requests: int = Field(..., description="Current in-flight request count.")
+    active_in_flight_requests: int = Field(
+        ..., description="Current in-flight request count."
+    )
 
 
 # ============================================================================
 # Endpoints
 # ============================================================================
+
 
 @router.get(
     "/health",
@@ -83,6 +89,8 @@ async def readiness_probe(request: Request) -> JSONResponse:
         active_in_flight_requests=in_flight,
     )
 
-    status_code = status.HTTP_200_OK if is_ready else status.HTTP_530_SERVICE_OFFLINE_ANOTHER
+    status_code = (
+        status.HTTP_200_OK if is_ready else status.HTTP_530_SERVICE_OFFLINE_ANOTHER
+    )
 
     return JSONResponse(status_code=status_code, content=payload.model_dump())

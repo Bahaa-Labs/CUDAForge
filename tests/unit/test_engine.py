@@ -67,7 +67,7 @@ def test_llm_engine_request_lifecycle(sample_config):
 
         # Instantiate engine
         engine = LLMEngine(sample_config)
-        
+
         # 1. Add Request
         prompt = [101, 202, 303]
         req_id = engine.add_request(prompt)

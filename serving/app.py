@@ -42,10 +42,12 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing CUDAForge serving infrastructure...")
     app.state.concurrency_semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
     app.state.start_time = time.time()
-    logger.info(f"Serving layer active. Max Concurrency Limit: {MAX_CONCURRENT_REQUESTS}")
-    
+    logger.info(
+        f"Serving layer active. Max Concurrency Limit: {MAX_CONCURRENT_REQUESTS}"
+    )
+
     yield
-    
+
     logger.info("Shutting down CUDAForge serving infrastructure...")
 
 
@@ -72,6 +74,7 @@ app.add_middleware(
 # Custom Backpressure Middleware
 # ============================================================================
 
+
 @app.middleware("http")
 async def backpressure_middleware(request: Request, call_next: Callable) -> Response:
     """Rejects incoming HTTP requests when overall processing queue saturates."""
@@ -92,7 +95,9 @@ async def backpressure_middleware(request: Request, call_next: Callable) -> Resp
         return await call_next(request)
 
     if active_in_flight_requests >= (MAX_CONCURRENT_REQUESTS + MAX_BACKPRESSURE_QUEUE):
-        logger.warning(f"Backpressure triggered. In-flight requests = {active_in_flight_requests}")
+        logger.warning(
+            f"Backpressure triggered. In-flight requests = {active_in_flight_requests}"
+        )
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content={
@@ -116,9 +121,12 @@ async def backpressure_middleware(request: Request, call_next: Callable) -> Resp
 # Exception Handlers & Core Diagnostics
 # ============================================================================
 
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    logger.error(f"Unhandled exception encountered at {request.url.path}: {exc}", exc_info=True)
+    logger.error(
+        f"Unhandled exception encountered at {request.url.path}: {exc}", exc_info=True
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

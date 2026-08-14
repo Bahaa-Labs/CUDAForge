@@ -17,7 +17,7 @@ def test_greedy_speculative_verification():
         [0.0] * 10,
         [0.0] * 10,
     ]
-    
+
     # Vocabulary size = 5
     vocab_size = 5
     draft_tokens = [1, 2, 3]

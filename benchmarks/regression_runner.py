@@ -16,14 +16,18 @@ class RegressionRunner:
     def __init__(self, baseline_path: Path, threshold_pct: float = 10.0) -> None:
         self.baseline_path = baseline_path
         self.threshold_pct = threshold_pct
-        
+
         if not self.baseline_path.exists():
-            raise FileNotFoundError(f"Baseline metrics missing at: {self.baseline_path}")
+            raise FileNotFoundError(
+                f"Baseline metrics missing at: {self.baseline_path}"
+            )
 
         with open(self.baseline_path, "r", encoding="utf-8") as f:
             self.baselines: Dict[str, Dict[str, float]] = json.load(f)
 
-    def verify_metric(self, name: str, metric_key: str, actual: float, lower_is_better: bool = True) -> bool:
+    def verify_metric(
+        self, name: str, metric_key: str, actual: float, lower_is_better: bool = True
+    ) -> bool:
         """Compares current run metric against target baseline threshold."""
         if name not in self.baselines or metric_key not in self.baselines[name]:
             print(f"[Regression Skip] Baseline key '{name}.{metric_key}' not found.")
@@ -52,17 +56,32 @@ class RegressionRunner:
 
         # 1. FlashAttention
         flash_res = run_flash_attn_benchmark()
-        pass_fa = self.verify_metric("flash_attention_v2", "flash_attn_p50_ms", flash_res["flash_attn_p50_ms"], lower_is_better=True)
+        pass_fa = self.verify_metric(
+            "flash_attention_v2",
+            "flash_attn_p50_ms",
+            flash_res["flash_attn_p50_ms"],
+            lower_is_better=True,
+        )
         all_passed = all_passed and pass_fa
 
         # 2. Paged KV Cache
         paged_res = run_paged_kv_benchmark()
-        pass_kv = self.verify_metric("paged_kv_cache_manager", "alloc_latency_p50_us", paged_res["alloc_latency_p50_us"], lower_is_better=True)
+        pass_kv = self.verify_metric(
+            "paged_kv_cache_manager",
+            "alloc_latency_p50_us",
+            paged_res["alloc_latency_p50_us"],
+            lower_is_better=True,
+        )
         all_passed = all_passed and pass_kv
 
         # 3. Continuous Batching
         cb_res = run_continuous_batch_benchmark()
-        pass_cb = self.verify_metric("continuous_batching_scheduler", "throughput_tokens_per_sec", cb_res["throughput_tokens_per_sec"], lower_is_better=False)
+        pass_cb = self.verify_metric(
+            "continuous_batching_scheduler",
+            "throughput_tokens_per_sec",
+            cb_res["throughput_tokens_per_sec"],
+            lower_is_better=False,
+        )
         all_passed = all_passed and pass_cb
 
         if all_passed:
