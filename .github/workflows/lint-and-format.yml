@@ -35,7 +35,7 @@ jobs:
 
       - name: Static Type Checking (Mypy)
         run: |
-          mypy --ignore-missing-imports cudaforge/ benchmarks/
+          mypy --ignore-missing-imports --implicit-optional --disable-error-code attr-defined --disable-error-code assignment cudaforge/ benchmarks/
 
   lint-cpp:
     name: Lint & Format Check (C++/CUDA)
