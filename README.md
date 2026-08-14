@@ -17,12 +17,6 @@
 [![Kernel Autotuning](https://img.shields.io/badge/Kernel-Autotuning-D2691E?style=for-the-badge)](#)
 [![Speculative Decoding](https://img.shields.io/badge/Speculative-Decoding-B22222?style=for-the-badge)](#)
 
-[![FP16](https://img.shields.io/badge/FP16-Inference-1E90FF?style=for-the-badge)](#)
-[![BF16](https://img.shields.io/badge/BF16-Inference-1E90FF?style=for-the-badge)](#)
-[![INT8](https://img.shields.io/badge/INT8-Quantization-8B5CF6?style=for-the-badge)](#)
-[![INT4](https://img.shields.io/badge/INT4-Quantization-8B5CF6?style=for-the-badge)](#)
-[![Ampere](https://img.shields.io/badge/NVIDIA-Ampere_sm__86-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](#)
-
 [![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
 [![Grafana](https://img.shields.io/badge/Grafana-Observability-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com/)
 [![Nsight Compute](https://img.shields.io/badge/NVIDIA-Nsight_Compute-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://developer.nvidia.com/nsight-compute)
