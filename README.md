@@ -2,13 +2,13 @@
 <h1>CUDAForge</h1>
 <h3><i>Production-Grade LLM Inference Runtime, GPU Kernel Optimization & Performance Engineering Platform</i></h3>
 
-[![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C.svg?style=for-the-badge&logo=cplusplus&logoColor=white)](https://isocpp.org/)
-[![CUDA](https://img.shields.io/badge/CUDA-GPU_Computing-76B900.svg?style=for-the-badge&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
-[![Triton](https://img.shields.io/badge/Triton-GPU_Kernels-FF6F00.svg?style=for-the-badge&logo=python&logoColor=white)](https://github.com/triton-lang/triton)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C.svg?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Serving-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C?style=flat-square&logo=cplusplus&logoColor=white)](https://isocpp.org/)
+[![CUDA](https://img.shields.io/badge/CUDA-GPU%20Acceleration-76B900?style=flat-square&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
+[![Triton](https://img.shields.io/badge/Triton-GPU%20Kernels-FF6F00?style=flat-square&logo=python&logoColor=white)](https://github.com/triton-lang/triton)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Serving-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-GPU%20Runtime-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 </div>
 
 ---
